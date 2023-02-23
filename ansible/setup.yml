@@ -1,0 +1,28 @@
+---
+- name: install some packages
+  hosts: all
+  become: true
+  tasks:
+    - name: Install a list of packages
+      ansible.builtin.apt:
+        update_cache: yes
+        autoclean: yes
+        pkg:
+          - nginx
+          - docker.io
+          - curl
+
+      -name: create deploy user
+      hosts: webserver
+      become: yes
+      tasks:
+        -ansible.builtin.user:
+        name: deploy
+        shell: /bin/bash
+        groups: docker.io
+        append: yes
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: deploy
+        state: present
+        key: "{{ lookup('file', './sshkey.pub') }}"
